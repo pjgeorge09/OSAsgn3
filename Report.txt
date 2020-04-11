@@ -1,0 +1,34 @@
+./ProgramName ProducersInteger ConsumersInteger
+
+Overall logic breakdown
+
+Create shared memory. 
+    1) The 30 x Structs array (Circular, using modular division)
+    2) Pointer to current array location 
+    3) Full Semaphore
+    4) Empty Semaphore
+    5) Bookkeeping Integer to let know when all jobs have finished. When they have, condition for graceful exit.
+        Use pthread_cancel for graceful exit
+    
+For #Producers, fork that many times.
+    Create random job count
+    Create random number for each job
+
+Should now have forked processes all trying to add things to the 1) 30x Struct Shared Memory Array.
+
+Still using my custom semWAIT on Shared Memory (Full)
+    Then insert into SHM buffer
+Then call my custom semRELEASE on Shared Memory (Empty)
+
+For inserting into the buffer itself
+    Create a temp object that sets the processID and the jobSize variables
+    It has it's own binary lock
+    It has a boolean flag to say either 0 = "I need to be written" or 1 = "I have been consumed, this space can be overwritten"
+
+    Since we KNOW that at least 1 space if available if we got here, iterate over the list locations 0 to 29 (Use buffer index, no need to iterate)
+    If FLAG says this location can be written into, 
+        lock this shared memory[here], 
+        overwrite the data,
+        unlock this shared memory struct for being consumed
+        return
+
